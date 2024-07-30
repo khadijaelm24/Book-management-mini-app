@@ -2,12 +2,14 @@ package com.example.junit_rest_api_application;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
@@ -53,12 +56,86 @@ public class BookControllerTest {
     @Test
     public void getAllRecords_success() throws Exception{
         List<Book> records = new ArrayList<>(Arrays.asList(RECORD_1, RECORD_2, RECORD_3));
+
         Mockito.when(bookRepository.findAll()).thenReturn(records);
+
         mockMvc.perform(MockMvcRequestBuilders
         .get("/book")
         .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(3)))
-        .andExpect(jsonPath("$[2].name", is("Algorithms")));
+        .andExpect(jsonPath("$[2].name", is("Algorithms")))
+        .andExpect(jsonPath("$[1].name", is("Thinking fast and slow")));
+    }
+
+    @Test
+    public void getBookById_success() throws Exception{
+        Mockito.when(bookRepository.findById(RECORD_1.getBookId())).thenReturn(java.util.Optional.of(RECORD_1));
+
+        mockMvc.perform(MockMvcRequestBuilders
+        .get("/book/1")
+        .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(MockMvcResultMatchers.jsonPath("$", notNullValue()))
+        .andExpect(jsonPath("$.name", is("Atomic Habits")));
+    }
+
+    @Test
+    public void createRecord_success() throws Exception{
+        Book record = Book.builder()
+        .bookId(4L)
+        .name("Introduction to C")
+        .summary("The name but longer")
+        .rating(5)
+        .build();
+
+        Mockito.when(bookRepository.save(record)).thenReturn(record);
+
+        String content = objectWriter.writeValueAsString(record);
+
+        MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders.post("/book")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .content(content);
+        
+        mockMvc.perform(mockRequest)
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$", notNullValue()))
+        .andExpect(jsonPath("$.name", is("Introduction to C")));
+    }
+
+    @Test
+    public void updateBookRecord_success() throws Exception{
+        Book updatedRecord = Book.builder()
+        .bookId(1L)
+        .name("Updated Book Name")
+        .summary("Updated Summary")
+        .rating(1).build();
+
+        Mockito.when(bookRepository.findById(RECORD_1.getBookId())).thenReturn(java.util.Optional.ofNullable(RECORD_1));
+        Mockito.when(bookRepository.save(updatedRecord)).thenReturn(updatedRecord);
+
+        String updatedContent = objectWriter.writeValueAsString(updatedRecord);
+
+        MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders.put("/book")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .content(updatedContent);
+
+        mockMvc.perform(mockRequest)
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$", notNullValue()))
+        .andExpect(jsonPath("$.name", is("Updated Book Name")));
+
+    }
+
+    @Test
+    public void deleteBookById_success() throws Exception {
+        Mockito.when(bookRepository.findById(RECORD_2.getBookId())).thenReturn(Optional.of(RECORD_2));
+
+        mockMvc.perform(MockMvcRequestBuilders
+            .delete("/book/2")
+            .contentType(MediaType.APPLICATION_JSON)
+            ).andExpect(status().isOk());
     }
 }

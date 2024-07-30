@@ -7,6 +7,7 @@ import javax.naming.NameNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -63,5 +64,18 @@ public class BookController {
         existingBookRecord.setRating(bookRecord.getRating());
         
         return bookRepository.save(existingBookRecord);
+    }
+
+    @DeleteMapping(value = "{bookId}")
+    public void deleteBookById(@PathVariable(value = "bookId") Long bookId) throws Exception{
+        if (!bookRepository.findById(bookId).isPresent()) {
+            try {
+                throw new NameNotFoundException("Book with ID: " + bookId + "does not exist.");
+            } catch (NameNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        bookRepository.deleteById(bookId);
     }
 }

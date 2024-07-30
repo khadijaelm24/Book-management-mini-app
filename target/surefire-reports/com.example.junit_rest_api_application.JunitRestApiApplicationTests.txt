@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.example.junit_rest_api_application.JunitRestApiApplicationTests
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.871 s - in com.example.junit_rest_api_application.JunitRestApiApplicationTests
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.919 s - in com.example.junit_rest_api_application.JunitRestApiApplicationTests
